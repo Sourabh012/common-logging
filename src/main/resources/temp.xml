@@ -1,0 +1,64 @@
+<configuration>
+    <!-- Console Appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <!-- Console will log ERROR level only -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level> <!-- Change if you want other levels in console -->
+        </filter>
+    </appender>
+
+    <!-- File Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- File location -->
+        <file>logs/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Rolling policy for daily log files -->
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory> <!-- Keep logs for 30 days -->
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <!-- Ensure application continues on logging errors -->
+        <errorHandler class="ch.qos.logback.core.helpers.OnlyOnceErrorHandler" />
+        <!-- File will log ERROR level only -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- Splunk Appender -->
+    <appender name="SPLUNK" class="com.splunk.logging.HttpEventCollectorLogbackAppender">
+        <url>https://splunk-hec-url:8088/services/collector/event</url> <!-- Replace with your Splunk HEC URL -->
+        <token>${splunk.token}</token> <!-- This needs to be dynamically fetched from Vault -->
+        <index>your_index</index> <!-- Replace with your Splunk index -->
+        <sourcetype>_json</sourcetype>
+        <host>localhost</host> <!-- Change as needed -->
+        <source>java-logging</source>
+        <errorHandler class="ch.qos.logback.core.helpers.OnlyOnceErrorHandler" />
+    </appender>
+
+    <!-- Asynchronous File Appender -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
+        <queueSize>5000</queueSize> <!-- Handle burst logging by buffering logs -->
+        <discardingThreshold>0</discardingThreshold> <!-- Don't discard logs until queue is full -->
+    </appender>
+
+    <!-- Asynchronous Splunk Appender -->
+    <appender name="ASYNC_SPLUNK" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="SPLUNK" />
+        <queueSize>5000</queueSize> <!-- Buffer logs to Splunk in case of spikes -->
+        <discardingThreshold>0</discardingThreshold> <!-- Keep all logs until queue is full -->
+    </appender>
+
+    <!-- Root Logger -->
+    <root level="INFO"> <!-- Change level here to control the default log level -->
+        <appender-ref ref="CONSOLE" />  <!-- Console logs only ERRORs -->
+        <appender-ref ref="ASYNC_FILE" /> <!-- File logs only ERRORs asynchronously -->
+        <appender-ref ref="ASYNC_SPLUNK" /> <!-- Splunk logs everything above INFO asynchronously -->
+    </root>
+</configuration>
