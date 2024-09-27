@@ -62,3 +62,28 @@
         <appender-ref ref="ASYNC_SPLUNK" /> <!-- Splunk logs everything above INFO asynchronously -->
     </root>
 </configuration>
+
+
+
+
+
+============
+<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file> <!-- Main log file location -->
+        
+        <!-- Time and Size based Rolling Policy -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- File name pattern, including date and index for size rolling -->
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- Maximum size of a single log file -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- Maximum number of history files (both time and size based) -->
+            <maxHistory>30</maxHistory>
+            <!-- Total size cap for all log files before older logs are deleted -->
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
